@@ -1,0 +1,70 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  EDITOR
+  PLAYER
+}
+
+enum RecordStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  role         UserRole @default(PLAYER)
+  discord      String?
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  records      Record[]
+
+  @@map("users")
+}
+
+model Level {
+  id          String   @id @default(cuid())
+  rank        Int      @unique
+  name        String
+  creator     String
+  videoUrl    String   @map("video_url")
+  description String
+  points      Int
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  records     Record[]
+
+  @@index([rank])
+  @@map("levels")
+}
+
+model Record {
+  id         String       @id @default(cuid())
+  status     RecordStatus @default(PENDING)
+  videoUrl   String       @map("video_url")
+  rawFootage String       @map("raw_footage")
+  playerName String       @map("player_name")
+  timestamp  DateTime     @default(now())
+  levelId    String       @map("level_id")
+  userId     String?      @map("user_id")
+  level      Level        @relation(fields: [levelId], references: [id], onDelete: Cascade)
+  user       User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([status, timestamp])
+  @@map("records")
+}

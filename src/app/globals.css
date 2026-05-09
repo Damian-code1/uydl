@@ -1,0 +1,33 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #050505;
+  --foreground: #f6f6f7;
+  --surface: #0d0d10;
+  --muted: #111117;
+  --border: #1f1f27;
+  --danger: #f43f5e;
+  --success: #34d399;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  min-height: 100vh;
+  background-image: radial-gradient(circle at top, #151521 0%, #050505 52%);
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .gradient-card {
+    background: linear-gradient(180deg, rgba(17, 17, 23, 0.82) 0%, rgba(7, 7, 10, 0.92) 100%);
+    border: 1px solid var(--border);
+    backdrop-filter: blur(12px);
+  }
+}
