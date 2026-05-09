@@ -1,22 +1,88 @@
-import { Swords } from "lucide-react";
-import { DemonList } from "@/components/list/DemonList";
+"use client";
 
-export default function Home() {
+import React, { useState } from 'react';
+
+export default function AdminPage() {
+  const [activeTab, setActiveTab] = useState('levels');
+
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 pb-12 pt-10 sm:px-8">
-      <header className="mb-8 flex items-center justify-between">
-        <div className="space-y-2">
-          <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-slate-300">
-            <Swords className="h-3.5 w-3.5" />
-            Uruguay Demon List
-          </div>
-          <h1 className="text-4xl font-black tracking-tight text-white sm:text-5xl">UYDL</h1>
-          <p className="max-w-2xl text-sm text-slate-300 sm:text-base">
-            Ranking oficial inspirado en Pointercrate con enfoque premium, animaciones fluidas y moderación profesional.
-          </p>
+    <main className="admin-page admin-shell">
+      <div className="admin-topbar">
+        <h1>Uruguay Demon List - Admin</h1>
+        <div className="admin-top-actions">
+          <button className="button button--primary" onClick={() => window.location.reload()}>
+            Refresh Data
+          </button>
         </div>
-      </header>
-      <DemonList />
+      </div>
+
+      <div className="admin-tabs">
+        <button 
+          className={`tab-btn ${activeTab === 'levels' ? 'active' : ''}`}
+          onClick={() => setActiveTab('levels')}
+        >
+          Manage Levels
+        </button>
+        <button 
+          className={`tab-btn ${activeTab === 'add' ? 'active' : ''}`}
+          onClick={() => setActiveTab('add')}
+        >
+          Add New Level
+        </button>
+      </div>
+
+      <div className={`tab-panel ${activeTab === 'levels' ? 'active' : ''}`}>
+        <div className="panel-head">
+          <h2>Current Levels</h2>
+        </div>
+        <div className="table-wrap">
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>Rank</th>
+                <th>Name</th>
+                <th>Creator</th>
+                <th>Tier</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td colSpan={5} style={{textAlign: 'center', padding: '20px'}}>
+                  Cargando niveles desde la base de datos...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div className={`tab-panel ${activeTab === 'add' ? 'active' : ''}`}>
+        <div className="panel-head">
+          <h2>Add New Demon</h2>
+        </div>
+        <form className="admin-form admin-form--grid">
+          <label>
+            Level Name
+            <input type="text" placeholder="e.g. Tartarus" />
+          </label>
+          <label>
+            Creator
+            <input type="text" placeholder="e.g. Riot" />
+          </label>
+          <label>
+            Placement (Rank)
+            <input type="number" placeholder="1" />
+          </label>
+          <label className="full">
+            Video URL
+            <input type="text" placeholder="https://youtube.com/..." />
+          </label>
+          <div className="form-actions full">
+            <button type="button" className="button button--primary">Save Level</button>
+          </div>
+        </form>
+      </div>
     </main>
   );
 }
