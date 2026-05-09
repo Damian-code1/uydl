@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { ChevronDown, Play, Users, Clock, Trophy, SquarePlay } from "lucide-react";
+import React, { useState } from 'react';
+import { ChevronDown, SquarePlay } from "lucide-react";
 import Link from "next/link";
 
 export type DemonLevel = {
@@ -24,6 +24,10 @@ export type DemonLevel = {
   }>;
 };
 
+interface LevelCardProps {
+  level: DemonLevel;
+}
+
 function getDifficultyClass(difficulty: string): string {
   const map: Record<string, string> = {
     EASY: "card-accent-achievements",
@@ -35,23 +39,12 @@ function getDifficultyClass(difficulty: string): string {
   return map[difficulty] || "card-accent-pointercrate";
 }
 
-function formatDuration(seconds: number): string {
-  const mins = Math.floor(seconds / 60);
-  return `${mins}m`;
-}
-
-interface LevelCardProps {
-  level: DemonLevel;
-  index: number;
-}
-
-export function LevelCard({ level, index }: LevelCardProps) {
+export default function LevelCard({ level }: LevelCardProps) {
   const [isVictorsOpen, setIsVictorsOpen] = useState(false);
   const difficultyClass = getDifficultyClass(level.difficulty);
 
   return (
     <article className={`list-card ${difficultyClass}`}>
-      {/* Thumbnail */}
       {level.thumbnailUrl && (
         <div className="list-card__thumb">
           <img
@@ -63,10 +56,8 @@ export function LevelCard({ level, index }: LevelCardProps) {
         </div>
       )}
 
-      {/* Title */}
       <h4>{level.name}</h4>
 
-      {/* Meta Info */}
       <div className="list-card__meta">
         <div>
           <p className="list-card__eyebrow">Difficulty</p>
@@ -77,35 +68,24 @@ export function LevelCard({ level, index }: LevelCardProps) {
         </div>
       </div>
 
-      {/* Creator */}
       <div className="list-card__meta">
         <div>
           <p className="list-card__eyebrow">Creator</p>
-          <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
+          <p style={{ color: "var(--text-secondary)", fontSize: "0.85rem" }}>
             {level.creator}
           </p>
         </div>
       </div>
 
-      {/* Description */}
-      <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem", marginBottom: "12px" }}>
-        {level.description}
-      </p>
-
-      {/* Stats List */}
       <ul className="list-card__list">
-        <li>
-          <strong>Duration:</strong> {formatDuration(level.durationSeconds)}
-        </li>
-        <li>
-          <strong>Record Requirement:</strong> {level.recordRequirement}
-        </li>
         <li>
           <strong>Points:</strong> {level.points}
         </li>
+        <li>
+          <strong>Requirement:</strong> {level.recordRequirement}
+        </li>
       </ul>
 
-      {/* Victors Section */}
       {level.victors && level.victors.length > 0 && (
         <div className="list-card__victors">
           <div
@@ -125,9 +105,9 @@ export function LevelCard({ level, index }: LevelCardProps) {
 
           {isVictorsOpen && (
             <div className="victor-chips">
-              {level.victors.slice(0, 5).map((victor, idx) => (
+              {level.victors.map((victor, idx) => (
                 <a
-                  key={idx}
+                  key={victor.id || idx}
                   href={victor.proofUrl}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -137,17 +117,11 @@ export function LevelCard({ level, index }: LevelCardProps) {
                   <span className="victor-chip__num">{idx + 1}</span>
                 </a>
               ))}
-              {level.victors.length > 5 && (
-                <span className="victor-chip" style={{ pointerEvents: "none", opacity: 0.6 }}>
-                  +{level.victors.length - 5} more
-                </span>
-              )}
             </div>
           )}
         </div>
       )}
 
-      {/* Action Button */}
       <Link href={`/levels/${level.id}`} className="completion-btn">
         <SquarePlay size={16} />
         View Details
