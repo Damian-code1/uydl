@@ -24,6 +24,14 @@ enum RecordStatus {
   REJECTED
 }
 
+enum Difficulty {
+  EASY
+  NORMAL
+  HARD
+  INSANE
+  EXTREME
+}
+
 model User {
   id           String   @id @default(cuid())
   email        String   @unique
@@ -38,33 +46,37 @@ model User {
 }
 
 model Level {
-  id          String   @id @default(cuid())
-  rank        Int      @unique
-  name        String
-  creator     String
-  videoUrl    String   @map("video_url")
-  description String
-  points      Int
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
-  records     Record[]
+  id               String      @id @default(cuid())
+  rank             Int         @unique
+  name             String
+  creator          String
+  videoUrl         String      @map("video_url")
+  description      String
+  points           Int
+  difficulty       Difficulty  @default(EXTREME)
+  durationSeconds  Int         @default(0) @map("duration_seconds")
+  recordRequirement String      @default("100%") @map("record_requirement")
+  thumbnailUrl     String?     @map("thumbnail_url")
+  createdAt        DateTime    @default(now()) @map("created_at")
+  updatedAt        DateTime    @updatedAt @map("updated_at")
+  records          Record[]
 
-  @@index([rank])
+  @@index([rank, difficulty])
   @@map("levels")
 }
 
 model Record {
   id         String       @id @default(cuid())
   status     RecordStatus @default(PENDING)
-  videoUrl   String       @map("video_url")
-  rawFootage String       @map("raw_footage")
+  proofUrl   String       @map("proof_url")
   playerName String       @map("player_name")
-  timestamp  DateTime     @default(now())
+  recordedAt DateTime     @default(now()) @map("recorded_at")
   levelId    String       @map("level_id")
   userId     String?      @map("user_id")
   level      Level        @relation(fields: [levelId], references: [id], onDelete: Cascade)
   user       User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
 
-  @@index([status, timestamp])
+  @@index([status, recordedAt])
+  @@index([levelId])
   @@map("records")
 }

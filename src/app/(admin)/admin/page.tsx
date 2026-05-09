@@ -3,8 +3,7 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import confetti from "canvas-confetti";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Settings, Plus, List } from "lucide-react";
 
 type LevelAdmin = {
   id: string;
@@ -44,6 +43,8 @@ export default function AdminPage() {
   const { data, isLoading } = useQuery({ queryKey: ["admin-data"], queryFn: fetchAdminData });
 
   const [formMap, setFormMap] = useState<Record<string, Partial<LevelAdmin>>>({});
+  const [activeTab, setActiveTab] = useState<"manage" | "add" | "settings">("manage");
+  const [newLevelForm, setNewLevelForm] = useState<Partial<LevelAdmin>>({});
 
   const levels = useMemo(() => data?.levels ?? [], [data?.levels]);
   const records = useMemo(() => data?.records ?? [], [data?.records]);
@@ -75,23 +76,328 @@ export default function AdminPage() {
   });
 
   if (isLoading) {
-    return <main className="mx-auto max-w-7xl p-6 text-slate-200">Cargando panel admin...</main>;
+    return (
+      <main className="admin-page">
+        <div className="admin-shell">
+          <div className="admin-topbar">
+            <h1>Admin Panel</h1>
+          </div>
+          <p style={{ color: "var(--muted)" }}>Cargando...</p>
+        </div>
+      </main>
+    );
   }
 
   return (
-    <main className="mx-auto w-full max-w-7xl space-y-10 px-4 py-8">
-      <section className="space-y-3">
-        <h1 className="text-3xl font-black text-white">Admin Panel</h1>
-        <p className="text-sm text-slate-300">Edición de niveles (Top 1-75) y aprobación de records pendientes.</p>
-      </section>
+    <main className="admin-page">
+      <div className="admin-shell">
+        {/* Admin Topbar */}
+        <div className="admin-topbar">
+          <div>
+            <h1>Admin Panel</h1>
+            <p style={{ color: "var(--muted)", fontSize: "0.9rem", marginTop: "4px" }}>
+              Gestiona niveles, registros y configuración
+            </p>
+          </div>
+          <div className="admin-top-actions">
+            <button className="button button--primary">
+              <Settings size={16} />
+              Sistema
+            </button>
+          </div>
+        </div>
 
-      <section className="space-y-3">
-        <h2 className="text-xl font-bold text-white">Niveles</h2>
-        <div className="space-y-2">
-          {levels.map((level) => {
-            const local = formMap[level.id] ?? {};
-            return (
-              <div key={level.id} className="gradient-card grid gap-2 rounded-lg p-3 sm:grid-cols-6">
+        {/* Tabs */}
+        <div className="admin-tabs">
+          <button
+            onClick={() => setActiveTab("manage")}
+            className={`tab-btn ${activeTab === "manage" ? "active" : ""}`}
+          >
+            <List size={16} />
+            Manage Levels
+          </button>
+          <button
+            onClick={() => setActiveTab("add")}
+            className={`tab-btn ${activeTab === "add" ? "active" : ""}`}
+          >
+            <Plus size={16} />
+            Add New Level
+          </button>
+          <button
+            onClick={() => setActiveTab("settings")}
+            className={`tab-btn ${activeTab === "settings" ? "active" : ""}`}
+          >
+            <Settings size={16} />
+            Settings
+          </button>
+        </div>
+
+        {/* Tab: Manage Levels */}
+        <div className={`tab-panel ${activeTab === "manage" ? "active" : ""}`}>
+          <div className="panel-head">
+            <h2>Manage Levels</h2>
+            <p style={{ color: "var(--muted)" }}>
+              Total: {levels.length} niveles
+            </p>
+          </div>
+
+          <div className="table-wrap">
+            <table className="admin-table">
+              <thead>
+                <tr>
+                  <th>Rank</th>
+                  <th>Name</th>
+                  <th>Creator</th>
+                  <th>Points</th>
+                  <th>Video</th>
+                  <th style={{ width: "120px" }}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {levels.map((level) => {
+                  const local = formMap[level.id] ?? {};
+                  return (
+                    <tr key={level.id}>
+                      <td>
+                        <input
+                          type="number"
+                          defaultValue={level.rank}
+                          onChange={(e) =>
+                            setFormMap((prev) => ({
+                              ...prev,
+                              [level.id]: { ...prev[level.id], rank: Number(e.target.value) },
+                            }))
+                          }
+                          style={{
+                            width: "60px",
+                            padding: "8px",
+                            borderRadius: "8px",
+                            border: "1px solid rgba(255, 255, 255, 0.1)",
+                            background: "rgba(255, 255, 255, 0.04)",
+                            color: "var(--text)",
+                          }}
+                        />
+                      </td>
+                      <td>
+                        <span>{local.name || level.name}</span>
+                      </td>
+                      <td>
+                        <span>{local.creator || level.creator}</span>
+                      </td>
+                      <td>
+                        <span>{local.points || level.points}</span>
+                      </td>
+                      <td>
+                        <a
+                          href={level.videoUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="button mini-btn"
+                        >
+                          Watch
+                        </a>
+                      </td>
+                      <td>
+                        <div className="table-actions">
+                          <button
+                            className="mini-btn"
+                            onClick={() =>
+                              updateLevel.mutate({
+                                id: level.id,
+                                payload: local,
+                              })
+                            }
+                            disabled={updateLevel.isPending}
+                          >
+                            Save
+                          </button>
+                          <button className="mini-btn danger">Delete</button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Pending Records Section */}
+          <div style={{ marginTop: "40px" }}>
+            <h3>Pending Records for Approval ({records.length})</h3>
+            <div className="table-wrap">
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th>Player</th>
+                    <th>Level</th>
+                    <th>Video Proof</th>
+                    <th style={{ width: "140px" }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {records.map((record) => (
+                    <tr key={record.id}>
+                      <td>{record.playerName}</td>
+                      <td>{record.levelName}</td>
+                      <td>
+                        <a
+                          href={record.videoUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="button mini-btn"
+                        >
+                          View
+                        </a>
+                      </td>
+                      <td>
+                        <div className="table-actions">
+                          <button
+                            className="mini-btn button--primary"
+                            onClick={() => approveRecord.mutate(record.id)}
+                            disabled={approveRecord.isPending}
+                          >
+                            Approve
+                          </button>
+                          <button className="mini-btn danger">Reject</button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        {/* Tab: Add New Level */}
+        <div className={`tab-panel ${activeTab === "add" ? "active" : ""}`}>
+          <div className="panel-head">
+            <h2>Add New Level</h2>
+          </div>
+
+          <form className="admin-form admin-form--grid">
+            <div>
+              <label>Level Name *</label>
+              <input
+                type="text"
+                placeholder="e.g., Sonic Wave"
+                value={newLevelForm.name || ""}
+                onChange={(e) =>
+                  setNewLevelForm({ ...newLevelForm, name: e.target.value })
+                }
+              />
+            </div>
+
+            <div>
+              <label>Creator *</label>
+              <input
+                type="text"
+                placeholder="e.g., Cyclic"
+                value={newLevelForm.creator || ""}
+                onChange={(e) =>
+                  setNewLevelForm({ ...newLevelForm, creator: e.target.value })
+                }
+              />
+            </div>
+
+            <div>
+              <label>Video URL *</label>
+              <input
+                type="url"
+                placeholder="https://youtube.com/watch?v=..."
+                value={newLevelForm.videoUrl || ""}
+                onChange={(e) =>
+                  setNewLevelForm({ ...newLevelForm, videoUrl: e.target.value })
+                }
+              />
+            </div>
+
+            <div>
+              <label>Rank Position *</label>
+              <input
+                type="number"
+                placeholder="1"
+                value={newLevelForm.rank || ""}
+                onChange={(e) =>
+                  setNewLevelForm({ ...newLevelForm, rank: Number(e.target.value) })
+                }
+              />
+            </div>
+
+            <div>
+              <label>Points *</label>
+              <input
+                type="number"
+                placeholder="100"
+                value={newLevelForm.points || ""}
+                onChange={(e) =>
+                  setNewLevelForm({ ...newLevelForm, points: Number(e.target.value) })
+                }
+              />
+            </div>
+
+            <div className="full">
+              <label>Description</label>
+              <textarea
+                placeholder="Brief level description..."
+                value={newLevelForm.description || ""}
+                onChange={(e) =>
+                  setNewLevelForm({ ...newLevelForm, description: e.target.value })
+                }
+              />
+            </div>
+
+            <div className="form-actions full">
+              <button type="submit" className="button button--primary">
+                <Plus size={16} />
+                Create Level
+              </button>
+              <button
+                type="button"
+                className="button"
+                onClick={() => setNewLevelForm({})}
+              >
+                Clear
+              </button>
+            </div>
+          </form>
+        </div>
+
+        {/* Tab: Settings */}
+        <div className={`tab-panel ${activeTab === "settings" ? "active" : ""}`}>
+          <div className="panel-head">
+            <h2>Admin Settings</h2>
+          </div>
+
+          <form className="admin-form">
+            <div>
+              <label>Site Title</label>
+              <input type="text" defaultValue="Uruguay Demon List" />
+            </div>
+
+            <div>
+              <label>Description</label>
+              <textarea defaultValue="Official list of demons, hardests, and victors in Uruguay." />
+            </div>
+
+            <div style={{ marginTop: "20px", paddingTop: "20px", borderTop: "1px solid rgba(255, 255, 255, 0.08)" }}>
+              <h3 style={{ marginBottom: "10px" }}>Danger Zone</h3>
+              <button type="button" className="button button--danger">
+                Reset Database
+              </button>
+            </div>
+
+            <div className="form-actions" style={{ marginTop: "30px" }}>
+              <button type="submit" className="button button--primary">
+                Save Settings
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </main>
+  );
+}
                 <Input
                   type="number"
                   defaultValue={level.rank}

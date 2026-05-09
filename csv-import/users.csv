@@ -1,0 +1,2 @@
+id,email,password_hash,role,discord,created_at,updated_at
+aba9f676-cd77-4683-a6f8-25e1dd4d9d59,admin@uydl.gg,$2a$12$vI8aWBYW2e9Vt.tIemZzeO7DlH.PKZbv5H8KnzzQgXXbVNruy.pFm,ADMIN,uyadmin#0001,2026-05-09T03:20:35.269Z,2026-05-09T03:20:35.269Z
