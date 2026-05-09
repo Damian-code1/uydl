@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { levelEditSchema } from "@/lib/validators";
+export const dynamic = 'force-dynamic';
 
 function clampRank(rank: number) {
   return Math.max(1, Math.min(75, rank));
